@@ -101,7 +101,7 @@ class Argument(object):
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True, store_missing=True, trim=False,
-                 nullable=True):
+                 nullable=True, content_type=None):
         self.name = name
         self.default = default
         self.dest = dest
@@ -117,6 +117,7 @@ class Argument(object):
         self.store_missing = store_missing
         self.trim = trim
         self.nullable = nullable
+        self.content_type = content_type
 
     def source(self, request):
         '''
@@ -204,6 +205,13 @@ class Argument(object):
         _not_found = False
         _found = True
 
+        if self.location == 'form':
+            # value = getattr(request, 'data')
+            # value = value.decode('UTF-8').split('=')[1]
+            # data = value.encode('UTF-8')
+            data = getattr(request, 'data')
+            return data, _found
+
         for operator in self.operators:
             name = self.name + operator.replace('=', '', 1)
             if name in source:
@@ -268,7 +276,8 @@ class Argument(object):
             return
         param = {
             'name': self.name,
-            'in': LOCATIONS.get(self.location, 'query')
+            'in': LOCATIONS.get(self.location, 'query'),
+            'content-type': None
         }
         _handle_arg_type(self, param)
         if self.required:
@@ -288,6 +297,11 @@ class Argument(object):
         if self.choices:
             param['enum'] = self.choices
             param['collectionFormat'] = 'multi'
+        if self.content_type == 'octet':
+            param['content-type'] = 'octet'
+        elif self.content_type == 'zip':
+            param['content-type'] = 'zip'
+
         return param
 
 

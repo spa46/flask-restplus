@@ -407,7 +407,9 @@ class Swagger(object):
         doc_params = list(doc.get('params', {}).values())
         all_params = doc_params + (operation['parameters'] or [])
         if all_params and any(p['in'] == 'formData' for p in all_params):
-            if any(p['type'] == 'file' for p in all_params):
+            if any(p['content-type'] == 'octet' for p in all_params):
+                operation['consumes'] = ['application/octet-stream']
+            elif any(p['type'] == 'file' for p in all_params):
                 operation['consumes'] = ['multipart/form-data']
             else:
                 operation['consumes'] = ['application/x-www-form-urlencoded', 'multipart/form-data']
